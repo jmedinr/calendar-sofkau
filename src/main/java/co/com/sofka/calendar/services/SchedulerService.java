@@ -35,22 +35,9 @@ public class SchedulerService {
         .switchIfEmpty(Mono.error(new RuntimeException("El programa academnico no existe")))// elevo excepcion si esta empty
         .map(this::getDurationOf) // obtengo el stream de duraciones
         .flatMapMany(Flux::fromStream) // convierto el stream a un flux
-        .map(toProgramDate(startDate, endDate, pivot[0], index)) // y hago la operacion
-        ;
+        .map(toProgramDate(startDate, endDate, pivot[0], index)); // y hago la operacion
 
       return program;
-
-
-      //TODO: debe pasarlo a reactivo, no puede trabaja elementos bloqueantes
-        //TODO: trabajar el map reactivo y no deben colectar
-      /*
-        var program = programRepository.findById(programId).block();
-        return Optional.ofNullable(program)
-                .map(this::getDurationOf)
-                .orElseThrow(() -> new RuntimeException("El programa academnico no existe"))
-                .map(toProgramDate(startDate, endDate, pivot[0], index))
-                .collect(Collectors.toList());
-        */
     }
 
     //No tocar
