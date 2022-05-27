@@ -13,11 +13,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ExtendWith(MockitoExtension.class)
 class SchedulerServiceTest {
@@ -39,11 +42,13 @@ class SchedulerServiceTest {
 
         Mockito.when(repository.findById(programId)).thenReturn(Mono.just(program));
         //TODO: hacer una subscripción de el servicio reactivo
-        List<ProgramDate> response = schedulerService.generateCalendar(programId, startDate);
+        Flux<ProgramDate> response = schedulerService.generateCalendar(programId, startDate);
 
-        Assertions.assertEquals(13, response.size());//TODO: hacer de otro modo
-        Assertions.assertEquals(getSnapResult(), new Gson().toJson(response));//TODO: hacer de otro modo
-        Mockito.verify(repository).findById(programId);
+        StepVerifier.create(response).expectNextCount(13).expectComplete().verify();
+        StepVerifier.create(response).equals(getSnapResult().equals(new Gson().toJson(response)));
+
+        //Assertions.assertEquals(13, response.size());//TODO: hacer de otro modo
+        //Assertions.assertEquals(json, new Gson().toJson(response.collectList().block()));//
     }
 
     @Test
@@ -54,11 +59,15 @@ class SchedulerServiceTest {
         Mockito.when(repository.findById(programId)).thenReturn(Mono.empty());
 
         //TODO: hacer de otro modo
-        var exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            schedulerService.generateCalendar(programId, startDate);//TODO: hacer una subscripción de el servicio reactivo
 
-        });
-        Assertions.assertEquals("El programa academnico no existe", exception.getMessage());//TODO: hacer de otro modo
+        Flux<ProgramDate> response = schedulerService.generateCalendar(programId, startDate);
+
+        RuntimeException exception = new RuntimeException("El programa academnico no existe");
+
+
+        StepVerifier.create(response).expectError(exception.getClass()).verify();
+
+        //Assertions.assertEquals("El programa academnico no existe", exception.getMessage());//TODO: hacer de otro modo
         Mockito.verify(repository).findById(programId);
 
     }
